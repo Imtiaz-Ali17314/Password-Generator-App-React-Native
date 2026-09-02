@@ -23,10 +23,10 @@ export default function App() {
   const [password, setPassword] = useState('');
   const [isPassGenerated, setIsPassGenerated] = useState(false);
 
-  const [lowerCase, setlowerCase] = useState(true);
-  const [upperCase, setupperCase] = useState(false);
-  const [numbers, setnumbers] = useState(false);
-  const [symbols, setsymbols] = useState(false);
+  const [lowerCase, setLowerCase] = useState(true);
+  const [upperCase, setUpperCase] = useState(false);
+  const [numbers, setNumbers] = useState(false);
+  const [symbols, setSymbols] = useState(false);
 
   const generatePasswordString = (passLength: number) => {
     let charactersList = '';
@@ -68,10 +68,10 @@ export default function App() {
     setPassword('');
     setIsPassGenerated(false);
 
-    setlowerCase(true);
-    setupperCase(false);
-    setnumbers(false);
-    setsymbols(false);
+    setLowerCase(true);
+    setUpperCase(false);
+    setNumbers(false);
+    setSymbols(false);
   };
 
   return (
@@ -118,17 +118,48 @@ export default function App() {
                 </View>
                 <View style={styles.inputWrapper}>
                   <Text style={styles.heading}>Include Lowercase</Text>
-                  <BouncyCheckbox
-                    useBuiltInState={false}
-                    isChecked={lowerCase}
-                    onPress={() => setlowerCase(!lowerCase)}
-                    fillColor="#29AB87"
-                  />
+                  <View>
+                    <BouncyCheckbox
+                      useBuiltInState={false}
+                      isChecked={lowerCase}
+                      onPress={() => setLowerCase(!lowerCase)}
+                      fillColor="#29AB87"
+                    />
+                  </View>
                 </View>
-                <View style={styles.inputWrapper}></View>
-                <View style={styles.inputWrapper}></View>
-                <View style={styles.inputWrapper}></View>
-
+                <View style={styles.inputWrapper}>
+                  <Text style={styles.heading}>Include Uppercase</Text>
+                  <View>
+                    <BouncyCheckbox
+                      useBuiltInState={false}
+                      isChecked={upperCase}
+                      onPress={() => setUpperCase(!upperCase)}
+                      fillColor="#FED85D"
+                    />
+                  </View>
+                </View>{' '}
+                <View style={styles.inputWrapper}>
+                  <Text style={styles.heading}>Include Numbers</Text>
+                  <View>
+                    <BouncyCheckbox
+                      useBuiltInState={false}
+                      isChecked={numbers}
+                      onPress={() => setNumbers(!numbers)}
+                      fillColor="#C9A0DC"
+                    />
+                  </View>
+                </View>{' '}
+                <View style={styles.inputWrapper}>
+                  <Text style={styles.heading}>Include Symbols</Text>
+                  <View>
+                    <BouncyCheckbox
+                      useBuiltInState={false}
+                      isChecked={symbols}
+                      onPress={() => setSymbols(!symbols)}
+                      fillColor="#FC80A5"
+                    />
+                  </View>
+                </View>
                 <View style={styles.formActions}>
                   <TouchableOpacity>
                     <Text>Generate Password</Text>
