@@ -18,12 +18,18 @@ export default function App() {
   const [numbers, setnumbers] = useState(false);
   const [symbols, setsymbols] = useState(false);
 
-  const generatePasswordString = (length: number) => {
+  const generatePasswordString = (passLength: number) => {
     //
   };
 
-  const createPassword = (characters: string, length: number) => {
-    //
+  const createPassword = (characters: string, passLength: number) => {
+    let password = '';
+
+    for (let i = 0; i < passLength; i++) {
+      const characterIndex = Math.floor(Math.random() * characters.length);
+      password += characters.charAt(characterIndex);
+    }
+    return password;
   };
 
   const resetPassword = () => {
