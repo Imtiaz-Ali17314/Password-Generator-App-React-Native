@@ -1,6 +1,10 @@
 import { useState } from 'react';
 import {
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
   ScrollView,
+  StatusBar,
   StyleSheet,
   Text,
   TextInput,
@@ -69,317 +73,446 @@ export default function App() {
     setSymbols(false);
   };
 
+  // Visual Password Strength Evaluator
+  const getStrengthInfo = (lengthStr: string) => {
+    if (!isPassGenerated || !password) return null;
+    const len = +lengthStr || password.length;
+    const activeCount = [lowerCase, upperCase, numbers, symbols].filter(
+      Boolean,
+    ).length;
+
+    if (len >= 10 && activeCount >= 3) {
+      return {
+        label: 'Ultra Strong',
+        color: '#10B981',
+        bg: '#064E3B',
+        border: '#059669',
+      };
+    }
+    if (len >= 8 && activeCount >= 2) {
+      return {
+        label: 'Strong',
+        color: '#34D399',
+        bg: '#065F46',
+        border: '#10B981',
+      };
+    }
+    if (len >= 6 && activeCount >= 1) {
+      return {
+        label: 'Medium',
+        color: '#FBBF24',
+        bg: '#78350F',
+        border: '#D97706',
+      };
+    }
+    return {
+      label: 'Weak',
+      color: '#F87171',
+      bg: '#7F1D1D',
+      border: '#DC2626',
+    };
+  };
+
   return (
     <SafeAreaView style={styles.safeArea}>
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
-        contentContainerStyle={styles.scrollContent}
+      <StatusBar barStyle="light-content" />
+      <KeyboardAvoidingView
+        style={styles.keyboardAvoidingView}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
       >
-        <View style={styles.container}>
-          {/* Header */}
-          <View style={styles.header}>
-            <View style={styles.brandRow}>
-              <View style={styles.logo}>
-                <Text style={styles.logoText}>✦</Text>
-              </View>
-
-              <Text style={styles.brandName}>SECUREGEN</Text>
-            </View>
-
-            <Text style={styles.title}>
-              Password
-              <Text style={styles.titleAccent}> Generator</Text>
-            </Text>
-
-            <Text style={styles.subtitle}>
-              Create strong, random passwords in seconds.
-            </Text>
-          </View>
-
-          <Formik
-            initialValues={{ passwordLength: '' }}
-            validationSchema={PasswordSchema}
-            onSubmit={values => {
-              generatePasswordString(+values.passwordLength);
-            }}
-          >
-            {({
-              values,
-              errors,
-              touched,
-              isValid,
-              handleChange,
-              handleSubmit,
-              handleReset,
-            }) => (
-              <View>
-                {/* Main Card */}
-                <View style={styles.mainCard}>
-                  {/* Generated Password */}
-                  <View style={styles.passwordSection}>
-                    <View style={styles.sectionTopRow}>
-                      <View>
-                        <Text style={styles.eyebrow}>GENERATED PASSWORD</Text>
-
-                        <Text style={styles.passwordHint}>
-                          {isPassGenerated
-                            ? 'Long press to copy'
-                            : 'Your password will appear here'}
-                        </Text>
-                      </View>
-
-                      {isPassGenerated && (
-                        <View style={styles.strongBadge}>
-                          <View style={styles.greenDot} />
-                          <Text style={styles.strongText}>Strong</Text>
-                        </View>
-                      )}
-                    </View>
-
-                    <View style={styles.passwordDisplay}>
-                      <Text
-                        selectable={true}
-                        style={[
-                          styles.passwordText,
-                          !isPassGenerated && styles.passwordPlaceholder,
-                        ]}
-                      >
-                        {isPassGenerated ? password : '••••••••••••'}
-                      </Text>
-                    </View>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
+          contentContainerStyle={styles.scrollContent}
+        >
+          <View style={styles.container}>
+            {/* Header */}
+            <View style={styles.header}>
+              <View style={styles.topRow}>
+                <View style={styles.brandRow}>
+                  <View style={styles.logo}>
+                    <Text style={styles.logoText}>⚡</Text>
                   </View>
+                  <Text style={styles.brandName}>SECUREGEN</Text>
+                </View>
 
-                  {/* Divider */}
-                  <View style={styles.divider} />
-
-                  {/* Password Length */}
-                  <View style={styles.lengthSection}>
-                    <View style={styles.labelRow}>
-                      <View>
-                        <Text style={styles.label}>Password Length</Text>
-
-                        <Text style={styles.helperText}>
-                          Choose between 4 and 12 characters
-                        </Text>
-                      </View>
-
-                      <View style={styles.numberBadge}>
-                        <Text style={styles.numberBadgeText}>
-                          {values.passwordLength || '—'}
-                        </Text>
-                      </View>
-                    </View>
-
-                    <TextInput
-                      style={[
-                        styles.input,
-                        touched.passwordLength &&
-                          errors.passwordLength &&
-                          styles.inputError,
-                      ]}
-                      value={values.passwordLength}
-                      onChangeText={handleChange('passwordLength')}
-                      placeholder="Enter length"
-                      placeholderTextColor="#6B7280"
-                      keyboardType="numeric"
-                      maxLength={2}
-                    />
-
-                    {touched.passwordLength && errors.passwordLength && (
-                      <Text style={styles.errorText}>
-                        {errors.passwordLength}
-                      </Text>
-                    )}
-                  </View>
-
-                  {/* Character Options */}
-                  <View style={styles.optionsSection}>
-                    <View style={styles.optionsHeader}>
-                      <View>
-                        <Text style={styles.label}>Character Types</Text>
-
-                        <Text style={styles.helperText}>
-                          Customize your password
-                        </Text>
-                      </View>
-                    </View>
-
-                    <View style={styles.optionsGrid}>
-                      {/* Lowercase */}
-                      <View
-                        style={[
-                          styles.optionCard,
-                          lowerCase && styles.optionCardActive,
-                        ]}
-                      >
-                        <View style={styles.optionContent}>
-                          <View
-                            style={[styles.optionSymbol, styles.lowerSymbol]}
-                          >
-                            <Text style={styles.symbolText}>ab</Text>
-                          </View>
-
-                          <View>
-                            <Text style={styles.optionTitle}>Lowercase</Text>
-
-                            <Text style={styles.optionSub}>a — z</Text>
-                          </View>
-                        </View>
-
-                        <BouncyCheckbox
-                          useBuiltInState={false}
-                          isChecked={lowerCase}
-                          onPress={() => setLowerCase(!lowerCase)}
-                          fillColor="#7C3AED"
-                          unFillColor="#242331"
-                          iconStyle={styles.checkbox}
-                          innerIconStyle={styles.innerCheckbox}
-                        />
-                      </View>
-
-                      {/* Uppercase */}
-                      <View
-                        style={[
-                          styles.optionCard,
-                          upperCase && styles.optionCardActive,
-                        ]}
-                      >
-                        <View style={styles.optionContent}>
-                          <View
-                            style={[styles.optionSymbol, styles.upperSymbol]}
-                          >
-                            <Text style={styles.symbolText}>AB</Text>
-                          </View>
-
-                          <View>
-                            <Text style={styles.optionTitle}>Uppercase</Text>
-
-                            <Text style={styles.optionSub}>A — Z</Text>
-                          </View>
-                        </View>
-
-                        <BouncyCheckbox
-                          useBuiltInState={false}
-                          isChecked={upperCase}
-                          onPress={() => setUpperCase(!upperCase)}
-                          fillColor="#7C3AED"
-                          unFillColor="#242331"
-                          iconStyle={styles.checkbox}
-                          innerIconStyle={styles.innerCheckbox}
-                        />
-                      </View>
-
-                      {/* Numbers */}
-                      <View
-                        style={[
-                          styles.optionCard,
-                          numbers && styles.optionCardActive,
-                        ]}
-                      >
-                        <View style={styles.optionContent}>
-                          <View
-                            style={[styles.optionSymbol, styles.numberSymbol]}
-                          >
-                            <Text style={styles.symbolText}>123</Text>
-                          </View>
-
-                          <View>
-                            <Text style={styles.optionTitle}>Numbers</Text>
-
-                            <Text style={styles.optionSub}>0 — 9</Text>
-                          </View>
-                        </View>
-
-                        <BouncyCheckbox
-                          useBuiltInState={false}
-                          isChecked={numbers}
-                          onPress={() => setNumbers(!numbers)}
-                          fillColor="#7C3AED"
-                          unFillColor="#242331"
-                          iconStyle={styles.checkbox}
-                          innerIconStyle={styles.innerCheckbox}
-                        />
-                      </View>
-
-                      {/* Symbols */}
-                      <View
-                        style={[
-                          styles.optionCard,
-                          symbols && styles.optionCardActive,
-                        ]}
-                      >
-                        <View style={styles.optionContent}>
-                          <View
-                            style={[styles.optionSymbol, styles.symbolsSymbol]}
-                          >
-                            <Text style={styles.symbolText}>#$%</Text>
-                          </View>
-
-                          <View>
-                            <Text style={styles.optionTitle}>Symbols</Text>
-
-                            <Text style={styles.optionSub}>! @ # $</Text>
-                          </View>
-                        </View>
-
-                        <BouncyCheckbox
-                          useBuiltInState={false}
-                          isChecked={symbols}
-                          onPress={() => setSymbols(!symbols)}
-                          fillColor="#7C3AED"
-                          unFillColor="#242331"
-                          iconStyle={styles.checkbox}
-                          innerIconStyle={styles.innerCheckbox}
-                        />
-                      </View>
-                    </View>
-                  </View>
-
-                  {/* Actions */}
-                  <View style={styles.actions}>
-                    <TouchableOpacity
-                      activeOpacity={0.85}
-                      disabled={!isValid}
-                      style={[
-                        styles.generateButton,
-                        !isValid && styles.generateButtonDisabled,
-                      ]}
-                      onPress={() => handleSubmit()}
-                    >
-                      <Text style={styles.generateButtonText}>
-                        Generate Password
-                      </Text>
-
-                      <Text style={styles.arrow}>→</Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                      activeOpacity={0.7}
-                      style={styles.resetButton}
-                      onPress={() => {
-                        handleReset();
-                        resetPassword();
-                      }}
-                    >
-                      <Text style={styles.resetText}>Reset settings</Text>
-                    </TouchableOpacity>
-                  </View>
+                <View style={styles.offlineBadge}>
+                  <View style={styles.offlineDot} />
+                  <Text style={styles.offlineText}>100% Offline</Text>
                 </View>
               </View>
-            )}
-          </Formik>
 
-          {/* Footer */}
-          <View style={styles.footer}>
-            <Text style={styles.footerIcon}>◈</Text>
+              <Text style={styles.title}>
+                Password
+                <Text style={styles.titleAccent}> Generator</Text>
+              </Text>
 
-            <Text style={styles.footerText}>
-              Your password is generated locally on your device.
-            </Text>
+              <Text style={styles.subtitle}>
+                Create strong, customized & random passwords instantly.
+              </Text>
+            </View>
+
+            <Formik
+              initialValues={{ passwordLength: '' }}
+              validationSchema={PasswordSchema}
+              onSubmit={values => {
+                generatePasswordString(+values.passwordLength);
+              }}
+            >
+              {({
+                values,
+                errors,
+                touched,
+                isValid,
+                handleChange,
+                handleSubmit,
+                handleReset,
+                setFieldValue,
+              }) => {
+                const strength = getStrengthInfo(values.passwordLength);
+
+                return (
+                  <View>
+                    {/* Main Card */}
+                    <View style={styles.mainCard}>
+                      {/* Generated Password Section */}
+                      <View style={styles.passwordSection}>
+                        <View style={styles.sectionTopRow}>
+                          <View>
+                            <Text style={styles.eyebrow}>GENERATED PASSWORD</Text>
+                            <Text style={styles.passwordHint}>
+                              {isPassGenerated
+                                ? 'Press & hold password to copy'
+                                : 'Your password will appear below'}
+                            </Text>
+                          </View>
+
+                          {strength && (
+                            <View
+                              style={[
+                                styles.strengthBadge,
+                                {
+                                  backgroundColor: strength.bg,
+                                  borderColor: strength.border,
+                                },
+                              ]}
+                            >
+                              <View
+                                style={[
+                                  styles.strengthDot,
+                                  { backgroundColor: strength.color },
+                                ]}
+                              />
+                              <Text
+                                style={[
+                                  styles.strengthText,
+                                  { color: strength.color },
+                                ]}
+                              >
+                                {strength.label}
+                              </Text>
+                            </View>
+                          )}
+                        </View>
+
+                        <View
+                          style={[
+                            styles.passwordDisplay,
+                            isPassGenerated && styles.passwordDisplayActive,
+                          ]}
+                        >
+                          <Text
+                            selectable={true}
+                            style={[
+                              styles.passwordText,
+                              !isPassGenerated && styles.passwordPlaceholder,
+                            ]}
+                          >
+                            {isPassGenerated ? password : '••••••••••••'}
+                          </Text>
+                        </View>
+                      </View>
+
+                      {/* Divider */}
+                      <View style={styles.divider} />
+
+                      {/* Password Length Section */}
+                      <View style={styles.lengthSection}>
+                        <View style={styles.labelRow}>
+                          <View>
+                            <Text style={styles.label}>Password Length</Text>
+                            <Text style={styles.helperText}>
+                              Select between 4 and 12 characters
+                            </Text>
+                          </View>
+
+                          <View style={styles.numberBadge}>
+                            <Text style={styles.numberBadgeText}>
+                              {values.passwordLength || '—'}
+                            </Text>
+                          </View>
+                        </View>
+
+                        {/* Input & Quick Presets */}
+                        <View style={styles.inputContainerRow}>
+                          <TextInput
+                            style={[
+                              styles.input,
+                              touched.passwordLength &&
+                                errors.passwordLength &&
+                                styles.inputError,
+                            ]}
+                            value={values.passwordLength}
+                            onChangeText={handleChange('passwordLength')}
+                            placeholder="Enter 4-12"
+                            placeholderTextColor="#4B4958"
+                            keyboardType="numeric"
+                            maxLength={2}
+                          />
+
+                          {/* Quick Presets */}
+                          <View style={styles.presetsRow}>
+                            {[4, 8, 12].map(preset => {
+                              const isSelected =
+                                values.passwordLength === String(preset);
+                              return (
+                                <Pressable
+                                  key={preset}
+                                  style={[
+                                    styles.presetChip,
+                                    isSelected && styles.presetChipActive,
+                                  ]}
+                                  onPress={() =>
+                                    setFieldValue('passwordLength', String(preset))
+                                  }
+                                >
+                                  <Text
+                                    style={[
+                                      styles.presetText,
+                                      isSelected && styles.presetTextActive,
+                                    ]}
+                                  >
+                                    {preset}
+                                  </Text>
+                                </Pressable>
+                              );
+                            })}
+                          </View>
+                        </View>
+
+                        {touched.passwordLength && errors.passwordLength && (
+                          <Text style={styles.errorText}>
+                            ⚠️ {errors.passwordLength}
+                          </Text>
+                        )}
+                      </View>
+
+                      {/* Character Options Section */}
+                      <View style={styles.optionsSection}>
+                        <View style={styles.optionsHeader}>
+                          <Text style={styles.label}>Character Types</Text>
+                          <Text style={styles.helperText}>
+                            Customize character inclusion criteria
+                          </Text>
+                        </View>
+
+                        <View style={styles.optionsGrid}>
+                          {/* Lowercase Option */}
+                          <TouchableOpacity
+                            activeOpacity={0.9}
+                            style={[
+                              styles.optionCard,
+                              lowerCase && styles.optionCardActiveLower,
+                            ]}
+                            onPress={() => setLowerCase(!lowerCase)}
+                          >
+                            <View style={styles.optionLeft}>
+                              <View
+                                style={[
+                                  styles.optionSymbol,
+                                  styles.lowerSymbolBg,
+                                ]}
+                              >
+                                <Text style={styles.lowerSymbolText}>ab</Text>
+                              </View>
+                              <View style={styles.optionMeta}>
+                                <Text style={styles.optionTitle}>Lowercase</Text>
+                                <Text style={styles.optionSub}>a — z</Text>
+                              </View>
+                            </View>
+
+                            <BouncyCheckbox
+                              disableText={true}
+                              size={22}
+                              useBuiltInState={false}
+                              isChecked={lowerCase}
+                              onPress={() => setLowerCase(!lowerCase)}
+                              fillColor="#8B5CF6"
+                              unFillColor="#1C1A27"
+                              iconStyle={styles.checkbox}
+                              innerIconStyle={styles.innerCheckbox}
+                            />
+                          </TouchableOpacity>
+
+                          {/* Uppercase Option */}
+                          <TouchableOpacity
+                            activeOpacity={0.9}
+                            style={[
+                              styles.optionCard,
+                              upperCase && styles.optionCardActiveUpper,
+                            ]}
+                            onPress={() => setUpperCase(!upperCase)}
+                          >
+                            <View style={styles.optionLeft}>
+                              <View
+                                style={[
+                                  styles.optionSymbol,
+                                  styles.upperSymbolBg,
+                                ]}
+                              >
+                                <Text style={styles.upperSymbolText}>AB</Text>
+                              </View>
+                              <View style={styles.optionMeta}>
+                                <Text style={styles.optionTitle}>Uppercase</Text>
+                                <Text style={styles.optionSub}>A — Z</Text>
+                              </View>
+                            </View>
+
+                            <BouncyCheckbox
+                              disableText={true}
+                              size={22}
+                              useBuiltInState={false}
+                              isChecked={upperCase}
+                              onPress={() => setUpperCase(!upperCase)}
+                              fillColor="#38BDF8"
+                              unFillColor="#1C1A27"
+                              iconStyle={styles.checkbox}
+                              innerIconStyle={styles.innerCheckbox}
+                            />
+                          </TouchableOpacity>
+
+                          {/* Numbers Option */}
+                          <TouchableOpacity
+                            activeOpacity={0.9}
+                            style={[
+                              styles.optionCard,
+                              numbers && styles.optionCardActiveNumber,
+                            ]}
+                            onPress={() => setNumbers(!numbers)}
+                          >
+                            <View style={styles.optionLeft}>
+                              <View
+                                style={[
+                                  styles.optionSymbol,
+                                  styles.numberSymbolBg,
+                                ]}
+                              >
+                                <Text style={styles.numberSymbolText}>123</Text>
+                              </View>
+                              <View style={styles.optionMeta}>
+                                <Text style={styles.optionTitle}>Numbers</Text>
+                                <Text style={styles.optionSub}>0 — 9</Text>
+                              </View>
+                            </View>
+
+                            <BouncyCheckbox
+                              disableText={true}
+                              size={22}
+                              useBuiltInState={false}
+                              isChecked={numbers}
+                              onPress={() => setNumbers(!numbers)}
+                              fillColor="#34D399"
+                              unFillColor="#1C1A27"
+                              iconStyle={styles.checkbox}
+                              innerIconStyle={styles.innerCheckbox}
+                            />
+                          </TouchableOpacity>
+
+                          {/* Symbols Option */}
+                          <TouchableOpacity
+                            activeOpacity={0.9}
+                            style={[
+                              styles.optionCard,
+                              symbols && styles.optionCardActiveSymbols,
+                            ]}
+                            onPress={() => setSymbols(!symbols)}
+                          >
+                            <View style={styles.optionLeft}>
+                              <View
+                                style={[
+                                  styles.optionSymbol,
+                                  styles.symbolsSymbolBg,
+                                ]}
+                              >
+                                <Text style={styles.symbolsSymbolText}>#$%</Text>
+                              </View>
+                              <View style={styles.optionMeta}>
+                                <Text style={styles.optionTitle}>Symbols</Text>
+                                <Text style={styles.optionSub}>! @ # $</Text>
+                              </View>
+                            </View>
+
+                            <BouncyCheckbox
+                              disableText={true}
+                              size={22}
+                              useBuiltInState={false}
+                              isChecked={symbols}
+                              onPress={() => setSymbols(!symbols)}
+                              fillColor="#F472B6"
+                              unFillColor="#1C1A27"
+                              iconStyle={styles.checkbox}
+                              innerIconStyle={styles.innerCheckbox}
+                            />
+                          </TouchableOpacity>
+                        </View>
+                      </View>
+
+                      {/* Actions */}
+                      <View style={styles.actions}>
+                        <TouchableOpacity
+                          activeOpacity={0.85}
+                          disabled={!isValid}
+                          style={[
+                            styles.generateButton,
+                            !isValid && styles.generateButtonDisabled,
+                          ]}
+                          onPress={() => handleSubmit()}
+                        >
+                          <Text style={styles.generateButtonText}>
+                            Generate Password
+                          </Text>
+                          <Text style={styles.arrow}>→</Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                          activeOpacity={0.7}
+                          style={styles.resetButton}
+                          onPress={() => {
+                            handleReset();
+                            resetPassword();
+                          }}
+                        >
+                          <Text style={styles.resetText}>↻ Reset settings</Text>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  </View>
+                );
+              }}
+            </Formik>
+
+            {/* Footer */}
+            <View style={styles.footer}>
+              <Text style={styles.footerIcon}>🛡️</Text>
+              <Text style={styles.footerText}>
+                Passwords are generated locally. No data leaves your device.
+              </Text>
+            </View>
           </View>
-        </View>
-      </ScrollView>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
@@ -387,60 +520,101 @@ export default function App() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#0D0C14',
+    backgroundColor: '#0A0911',
+  },
+
+  keyboardAvoidingView: {
+    flex: 1,
   },
 
   scrollContent: {
     flexGrow: 1,
+    paddingBottom: 40,
   },
 
   container: {
-    paddingHorizontal: 18,
-    paddingTop: 28,
-    paddingBottom: 35,
+    paddingHorizontal: 20,
+    paddingTop: 24,
+    paddingBottom: 36,
   },
 
   /* Header */
 
   header: {
-    marginBottom: 26,
+    marginBottom: 24,
+  },
+
+  topRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 20,
   },
 
   brandRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 22,
   },
 
   logo: {
-    width: 32,
-    height: 32,
-    borderRadius: 10,
+    width: 36,
+    height: 36,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#7C3AED',
     marginRight: 10,
+    shadowColor: '#7C3AED',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 8,
+    elevation: 4,
   },
 
   logoText: {
     color: '#FFFFFF',
-    fontSize: 17,
+    fontSize: 18,
     fontWeight: '900',
   },
 
   brandName: {
-    color: '#A1A1AA',
-    fontSize: 12,
-    fontWeight: '800',
-    letterSpacing: 2,
+    color: '#E4E4E7',
+    fontSize: 13,
+    fontWeight: '900',
+    letterSpacing: 2.5,
+  },
+
+  offlineBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#161F1A',
+    borderWidth: 1,
+    borderColor: '#1E382B',
+    borderRadius: 20,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+  },
+
+  offlineDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#34D399',
+    marginRight: 6,
+  },
+
+  offlineText: {
+    color: '#34D399',
+    fontSize: 11,
+    fontWeight: '700',
   },
 
   title: {
     color: '#FFFFFF',
-    fontSize: 38,
-    lineHeight: 43,
+    fontSize: 36,
+    lineHeight: 42,
     fontWeight: '900',
-    letterSpacing: -1.3,
+    letterSpacing: -1.2,
   },
 
   titleAccent: {
@@ -448,23 +622,28 @@ const styles = StyleSheet.create({
   },
 
   subtitle: {
-    color: '#71717A',
+    color: '#8E8C9A',
     fontSize: 14,
-    marginTop: 9,
+    marginTop: 8,
     lineHeight: 20,
   },
 
   /* Main Card */
 
   mainCard: {
-    backgroundColor: '#17161F',
-    borderRadius: 24,
+    backgroundColor: '#13111C',
+    borderRadius: 26,
     borderWidth: 1,
-    borderColor: '#292733',
-    padding: 18,
+    borderColor: '#232033',
+    padding: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.3,
+    shadowRadius: 20,
+    elevation: 8,
   },
 
-  /* Password */
+  /* Password Section */
 
   passwordSection: {
     marginBottom: 20,
@@ -474,81 +653,92 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginBottom: 13,
+    marginBottom: 12,
   },
 
   eyebrow: {
-    color: '#71717A',
+    color: '#8E8C9A',
     fontSize: 10,
     fontWeight: '800',
     letterSpacing: 1.5,
   },
 
   passwordHint: {
-    color: '#52525B',
+    color: '#656372',
     fontSize: 11,
-    marginTop: 4,
+    marginTop: 3,
   },
 
-  strongBadge: {
+  strengthBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#13251B',
     borderWidth: 1,
-    borderColor: '#21472D',
     borderRadius: 20,
-    paddingHorizontal: 9,
-    paddingVertical: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
   },
 
-  greenDot: {
+  strengthDot: {
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: '#4ADE80',
-    marginRight: 5,
+    marginRight: 6,
   },
 
-  strongText: {
-    color: '#4ADE80',
+  strengthText: {
     fontSize: 10,
     fontWeight: '800',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
 
   passwordDisplay: {
-    minHeight: 86,
-    borderRadius: 16,
-    backgroundColor: '#0F0E15',
-    borderWidth: 1,
-    borderColor: '#302D3B',
+    minHeight: 90,
+    borderRadius: 18,
+    backgroundColor: '#0A0911',
+    borderWidth: 1.5,
+    borderColor: '#262238',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+  },
+
+  passwordDisplayActive: {
+    borderColor: '#7C3AED',
+    backgroundColor: '#100C1B',
+    shadowColor: '#7C3AED',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
+    elevation: 3,
   },
 
   passwordText: {
-    color: '#FFFFFF',
-    fontSize: 23,
+    color: '#F4F4F5',
+    fontSize: 24,
     fontWeight: '800',
-    letterSpacing: 1.2,
+    letterSpacing: 2,
     textAlign: 'center',
+    fontFamily: 'monospace',
   },
 
   passwordPlaceholder: {
-    color: '#3F3E48',
+    color: '#343242',
     letterSpacing: 4,
+    fontFamily: undefined,
   },
 
   divider: {
     height: 1,
-    backgroundColor: '#292733',
+    backgroundColor: '#211E2E',
     marginBottom: 22,
   },
 
-  /* Length */
+  /* Length Section */
 
   lengthSection: {
-    marginBottom: 25,
+    marginBottom: 24,
   },
 
   labelRow: {
@@ -559,180 +749,257 @@ const styles = StyleSheet.create({
   },
 
   label: {
-    color: '#F4F4F5',
+    color: '#FFFFFF',
     fontSize: 15,
     fontWeight: '800',
   },
 
   helperText: {
-    color: '#60606A',
+    color: '#716F82',
     fontSize: 11,
-    marginTop: 4,
+    marginTop: 3,
   },
 
   numberBadge: {
-    minWidth: 42,
+    minWidth: 44,
     height: 34,
-    paddingHorizontal: 9,
-    borderRadius: 9,
+    paddingHorizontal: 10,
+    borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#241A3D',
+    backgroundColor: '#231B3A',
     borderWidth: 1,
-    borderColor: '#432D6C',
+    borderColor: '#4C3575',
   },
 
   numberBadgeText: {
     color: '#C4B5FD',
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: '900',
   },
 
+  inputContainerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+
   input: {
+    flex: 1,
     height: 52,
-    backgroundColor: '#111017',
-    borderWidth: 1,
-    borderColor: '#302E38',
-    borderRadius: 13,
-    paddingHorizontal: 15,
+    backgroundColor: '#0A0911',
+    borderWidth: 1.5,
+    borderColor: '#29253B',
+    borderRadius: 14,
+    paddingHorizontal: 16,
     color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: 15,
+    fontWeight: '700',
   },
 
   inputError: {
     borderColor: '#EF4444',
+    backgroundColor: '#1C1215',
+  },
+
+  presetsRow: {
+    flexDirection: 'row',
+    marginLeft: 10,
+  },
+
+  presetChip: {
+    width: 44,
+    height: 52,
+    borderRadius: 14,
+    backgroundColor: '#1B1828',
+    borderWidth: 1,
+    borderColor: '#2C283F',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 6,
+  },
+
+  presetChipActive: {
+    backgroundColor: '#7C3AED',
+    borderColor: '#9333EA',
+  },
+
+  presetText: {
+    color: '#A1A1AA',
+    fontSize: 14,
+    fontWeight: '800',
+  },
+
+  presetTextActive: {
+    color: '#FFFFFF',
   },
 
   errorText: {
     color: '#F87171',
-    fontSize: 11,
-    marginTop: 7,
-    marginLeft: 2,
+    fontSize: 12,
+    marginTop: 8,
+    fontWeight: '600',
   },
 
-  /* Options */
+  /* Options Section */
 
   optionsSection: {
-    marginBottom: 25,
+    marginBottom: 24,
   },
 
   optionsHeader: {
-    marginBottom: 12,
+    marginBottom: 14,
   },
 
   optionsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
+    gap: 10,
   },
 
   optionCard: {
-    width: '48.5%',
-    minHeight: 83,
-    backgroundColor: '#111017',
-    borderWidth: 1,
-    borderColor: '#292733',
-    borderRadius: 14,
-    padding: 10,
-    marginBottom: 9,
+    width: '100%',
+    minHeight: 64,
+    backgroundColor: '#0A0911',
+    borderWidth: 1.5,
+    borderColor: '#232033',
+    borderRadius: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'space-between',
   },
 
-  optionCardActive: {
-    borderColor: '#4C3575',
-    backgroundColor: '#191524',
+  optionCardActiveLower: {
+    borderColor: '#7C3AED',
+    backgroundColor: '#171226',
   },
 
-  optionContent: {
+  optionCardActiveUpper: {
+    borderColor: '#0284C7',
+    backgroundColor: '#0F1E2E',
+  },
+
+  optionCardActiveNumber: {
+    borderColor: '#059669',
+    backgroundColor: '#0C221A',
+  },
+
+  optionCardActiveSymbols: {
+    borderColor: '#DB2777',
+    backgroundColor: '#241220',
+  },
+
+  optionLeft: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
+    marginRight: 12,
   },
 
   optionSymbol: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
+    width: 40,
+    height: 40,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 9,
+    marginRight: 12,
   },
 
-  lowerSymbol: {
-    backgroundColor: '#272036',
+  lowerSymbolBg: {
+    backgroundColor: '#2A1F45',
   },
 
-  upperSymbol: {
-    backgroundColor: '#2B2139',
-  },
-
-  numberSymbol: {
-    backgroundColor: '#22283B',
-  },
-
-  symbolsSymbol: {
-    backgroundColor: '#362330',
-  },
-
-  symbolText: {
-    color: '#D4D4D8',
-    fontSize: 10,
+  lowerSymbolText: {
+    color: '#C4B5FD',
+    fontSize: 13,
     fontWeight: '900',
   },
 
-  optionTitle: {
-    color: '#E4E4E7',
+  upperSymbolBg: {
+    backgroundColor: '#172E48',
+  },
+
+  upperSymbolText: {
+    color: '#7DD3FC',
+    fontSize: 13,
+    fontWeight: '900',
+  },
+
+  numberSymbolBg: {
+    backgroundColor: '#13352A',
+  },
+
+  numberSymbolText: {
+    color: '#6EE7B7',
+    fontSize: 13,
+    fontWeight: '900',
+  },
+
+  symbolsSymbolBg: {
+    backgroundColor: '#3D1B33',
+  },
+
+  symbolsSymbolText: {
+    color: '#F472B6',
     fontSize: 12,
+    fontWeight: '900',
+  },
+
+  optionMeta: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+
+  optionTitle: {
+    color: '#FFFFFF',
+    fontSize: 14,
     fontWeight: '800',
   },
 
   optionSub: {
-    color: '#52525B',
-    fontSize: 9,
-    marginTop: 3,
+    color: '#716F82',
+    fontSize: 11,
+    marginTop: 2,
   },
 
   checkbox: {
-    borderRadius: 5,
+    borderRadius: 6,
   },
 
   innerCheckbox: {
-    borderRadius: 5,
+    borderRadius: 6,
   },
 
   /* Buttons */
 
   actions: {
-    marginTop: 2,
+    marginTop: 4,
   },
 
   generateButton: {
-    height: 55,
-    borderRadius: 14,
+    height: 56,
+    borderRadius: 16,
     backgroundColor: '#7C3AED',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#7C3AED',
-    shadowOffset: {
-      width: 0,
-      height: 7,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.4,
+    shadowRadius: 16,
     elevation: 6,
   },
 
   generateButtonDisabled: {
-    backgroundColor: '#3A3150',
+    backgroundColor: '#2A233C',
     shadowOpacity: 0,
     elevation: 0,
   },
 
   generateButtonText: {
     color: '#FFFFFF',
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: '900',
+    letterSpacing: 0.5,
   },
 
   arrow: {
@@ -740,18 +1007,19 @@ const styles = StyleSheet.create({
     fontSize: 20,
     marginLeft: 10,
     marginTop: -2,
+    fontWeight: '900',
   },
 
   resetButton: {
-    height: 43,
+    height: 44,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 5,
+    marginTop: 8,
   },
 
   resetText: {
-    color: '#71717A',
-    fontSize: 11,
+    color: '#8E8C9A',
+    fontSize: 13,
     fontWeight: '700',
   },
 
@@ -761,19 +1029,19 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 19,
-    paddingHorizontal: 10,
+    marginTop: 24,
+    paddingHorizontal: 12,
   },
 
   footerIcon: {
-    color: '#52525B',
-    fontSize: 12,
-    marginRight: 7,
+    fontSize: 14,
+    marginRight: 8,
   },
 
   footerText: {
-    color: '#52525B',
-    fontSize: 10,
+    color: '#656372',
+    fontSize: 12,
     textAlign: 'center',
+    fontWeight: '500',
   },
 });
